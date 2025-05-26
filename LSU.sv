@@ -33,19 +33,19 @@ module LSU (
       data_req_op = 1'b1;
       case (lsu_operator_ip)
         LW: begin
-          if ((mem_addr_ip % 4 == 0) && (mem_addr_ip >= 512 && mem_addr_ip <= 8704)) begin 
-            load_mem_data_op = mem_data_ip; //send back to decode
-          else
+          if ((mem_addr_ip % 4 == 0)) begin //Memory Aligned
+            data_req_op = 1'b1;
+            load_mem_data_op = mem_data_ip;
+          end else begin
             data_req_op = 1'b0; //Invalid address
           end
         end
         
-        SW: begin 
-          if ((mem_addr_ip % 4 == 0) && (mem_addr_ip >= 512 && mem_addr_ip <= 8704)) begin
-              //load_mem_data_op = mem_data_ip 
+        SW: begin
+          if ((mem_addr_ip % 4 == 0)) begin //Memory Aligned
               data_req_op = 1'b1;
-          else
-            data_req_op = 1'b0; //Invalid address
+          end else begin
+              data_req_op = 1'b0; //Invalid address
           end 
         end
       endcase
