@@ -29,6 +29,7 @@ module Fetch(
   always_comb begin
     unique case (pc_mux_ip)
       NEXTPC: Next_PC = PC + 4;
+      ALU_RESULT: Next_PC = alu_result_ip; 
       default: Next_PC = PC;
     endcase
   end
