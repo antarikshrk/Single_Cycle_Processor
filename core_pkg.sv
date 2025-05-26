@@ -1,82 +1,23 @@
 package CORE_PKG;
-
-  /**
-  * STORES OPCODE includes sb, sh, sw
-  */
+  
+  //STORES OPCODE includes sb, sh, sw
   parameter OPCODE_STORE = 7'h23;
-
-  /**
-  * LOAD opcode includes lb, lh, lw, lbu, lhu
-  * 
-  * I-type encoded with effective address obtained by adding rs1 
-  * to SIGN-EXTENDED 12-bit offset value. 
-  * 
-  * LH loads a 16 bit value from mem and then SIGN-EXTENDS it to 
-  * 32 bits before storing in rd while LHU ZERO-EXTENDS the 16-bit value
-  */
+  
+  //LOAD opcode includes lb, lh, lw, lbu, lhu
   parameter OPCODE_LOAD = 7'h03;
-
-  // FOR LOADS AND STORES. Misaligned addresses based on word, half-word, or byte 
-  // will for our cases will raise a mis-aligned address exception and delegate it
-  // to the OS. Not our problem! Possible implementations can handle it "invisibly" in hardware
-
-  /**
-  * BRANCH opcode includes beq, bne, blt, bge, bltu, and bgeu
-  *
-  * BEQ/BNE: take the branch if equal or not equal
-  * blt[u]: take the branch ONLY IF rs1 < rs2 using signed/unsigned comparisions
-  * bge[u]: take the branch if rs1 >= rs2 using signed/unsigned comparisions
-  */
+  
+  // BRANCH opcode includes beq, bne, blt, bge, bltu, and bgeu
   parameter OPCODE_BRANCH = 7'h63;
-
-
-  /**
-  * JALR has its own opcode
-  * 
-  * Uses I-immd. Add a sign-extended 12-bit I-immd to value in rs1 then
-  * setting the least significant bit to 0 (so multiples of 2). The addr.
-  * of the instruction following the jump (current PC before jump + 4) is
-  * written to register rd. 
-  */
+  
   parameter OPCODE_JALR = 7'h67;
-
-  /**
-  * JAL has its own opcode
-  *
-  * A J-immd is sign-extended and added to pc-address of the instruction 
-  * to form the jump target address. NOTE that the 20 bit immd is encoded
-  * in multiples of 2 bytes so the actual value is shifted by 2 before sign-extended.
-  * The PC jumps to this address. At the same time, this the addr. following the jump
-  * instruction (current PC no jump +4) is stored in register rd. If rd is reg. 0, then 
-  * this is just a jump instruction. This is used to return to the PC later
-  */
   parameter OPCODE_JAL = 7'h6f;
-
-  /**
-  * AUI has its own opcode
-  * 
-  * Add upper immd to PC. It is used to build pc-relative addresses. 
-  * It is a U-type instruction with U-type immd. It forms a 32-bit offset
-  * from the 20 but U-immediate by zero padding. This 32-bit offset is added
-  * to the pc address of the AUI instr and placed in rd register. 
-  */
   parameter OPCODE_AUIPC = 7'h17;
-
-  /**
-  * LUI has its own opcode
-  *
-  * Zero pads a 20 bit U-type immediate and places result in rd register. 
-  */
   parameter OPCODE_LUI = 7'h37;
-
-  /**
-  * All register to register instructions
-  */
+  
+  //All register to register instructions
   parameter OPCODE_OP = 7'h33;
 
-  /**
-  * All register immediate instructions
-  */
+  //All register immediate instructions
   parameter OPCODE_OPIMM = 7'h13;
 
 
@@ -157,7 +98,6 @@ package CORE_PKG;
     OFFSET
   } pc_mux;
 
-  // operand_a is left and operand_b is right 
   typedef enum logic [2:0] {
     COMP_BEQ = 3'b000,
     COMP_BNE = 3'b001,
@@ -166,7 +106,6 @@ package CORE_PKG;
     COMP_BLT_U = 3'b110,
     COMP_BGE_U = 3'b111,
     
-    // Set Lower Than operations
     COMP_SLTS  = 3'b010,
     COMP_SLTU  = 3'b011
   } comparator_func_code;
