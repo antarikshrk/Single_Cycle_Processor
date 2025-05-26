@@ -14,7 +14,6 @@ module ALU (
   output logic [31:0] alu_result_op,
   output logic alu_valid_op
 ); 
-//Ok, that makes sense!
   always_comb begin
     case(alu_operator_ip) 
       ALU_ADD: begin //Result = Register A + Register B
@@ -25,7 +24,7 @@ module ALU (
         alu_result_op = alu_operand_a_ip - alu_operand_b_ip;
         alu_valid_op = 1;
       end
-       ALU_SLTS: begin
+      ALU_SLTS: begin //Set if Less than (Signed)
         if ($signed(alu_operand_a_ip) < $signed(alu_operand_b_ip)) begin
           alu_result_op = 32'b1;
         end else begin
