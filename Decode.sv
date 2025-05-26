@@ -117,29 +117,41 @@ module Decode (
           3'b000: alu_operator_op = ALU_ADD; // ADDI
         endcase
       end
-
-      OPCODE_LOAD: begin //Register-Immediate operation
-        operand_a_select = REG_A;
-        operand_b_select = I_IMMD;
+      OPCODE_LOAD: begin
+        operand_a_select = REG_A; //19:15
+        operand_b_select = I_IMMD; //31:20
         writeback_mux = READ_MEM_RESULT; //Reading value from Memory File
+        alu_operator_op = ALU_ADD;
+        mem_wdata_op = mem_data_ip; //Data written to memory is equal to data from load
+        en_lsu_op = 1'b1; //Enable LSU
         case(valid_instr_to_decode[14:12])
           3'b010: lsu_operator_op = LW;
           3'b001: lsu_operator_op = LH;
-          3'b000: lsu_operator_op = LB;
+          3'b000: lsu_operator_op = LB; 
           3'b101: lsu_operator_op = LHU;
           3'b100: lsu_operator_op = LBU;
-        endcase
+        endcase 
       end
-
       OPCODE_STORE: begin
         operand_a_select = REG_A;
-        operand_b_select = REG;
+        operand_b_select = S_IMMD;
         writeback_mux = NO_WRITEBACK; //Nothing Written back to Register File
+        alu_operator_op = ALU_ADD;
+        mem_wdata_op = regfile_b_out; //Write the value inside Register b to Memory Write Data
+        en_lsu_op = 1'b1; //Enable LSU
         case(valid_instr_to_decode[14:12])
           3'b010: lsu_operator_op = SW;
           3'b001: lsu_operator_op = SH;
           3'b000: lsu_operator_op = SB;
         endcase
+      end
+      OPCODE_JAL: begin
+        operand_a_select = PC; //Need the current address
+        operand_b_select = J_IMMD; //Add the immediate
+        alu_operator_op = ALU_ADD; //Set ALU_ADD
+        pc_mux_op = ALU_RESULT;
+        writeback_mux = READ_PC4;
+        //pc_branch_offset_op = J_IMMD;
       end
     endcase
   end
@@ -156,6 +168,7 @@ module Decode (
   always @(*) begin
     case(operand_a_select)
       REG_A: alu_operand_a_ex_op = regfile_a_out;
+      PC: alu_operand_a_ex_op = pc;
       default: alu_operand_a_ex_op = 32'bz;
     endcase
   end
@@ -164,6 +177,8 @@ module Decode (
     case(operand_b_select)
       REG: alu_operand_b_ex_op = regfile_b_out;
       I_IMMD: alu_operand_b_ex_op = $signed(valid_instr_to_decode[I_IMM_MSB:I_IMM_LSB]);
+      S_IMMD: alu_operand_b_ex_op = {{20{valid_instr_to_decode[31]}}, valid_instr_to_decode[31:25], valid_instr_to_decode[11:7]};
+      J_IMMD: alu_operand_b_ex_op = {{12{valid_instr_to_decode[31]}},valid_instr_to_decode[19:12], valid_instr_to_decode[20], valid_instr_to_decode[30:21], 1'b0};
       default: alu_operand_b_ex_op = 32'bz;
     endcase
   end
@@ -174,6 +189,10 @@ module Decode (
       READ_ALU_RESULT: begin
         regfile_write_data_valid = alu_result_valid_ip;
         regfile_write_data = alu_result_ip;
+      end
+      READ_PC4: begin
+        regfile_write_data_valid = 1'b1;
+        regfile_write_data = pc4;
       end
       READ_MEM_RESULT: begin 
         regfile_write_data_valid = mem_data_valid_ip;
